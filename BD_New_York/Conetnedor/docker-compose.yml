@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  mssql-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: BD_New_York   # nombre del contenedor
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Arquitectura2_New_york"
+      MSSQL_PID: "Developer"
+      TZ: "America/Guatemala"     # zona horaria correcta
+    ports:
+      - "1444:1433"   # puerto host:puerto contenedor
+    volumes:
+      - mssql-data:/var/opt/mssql
+volumes:
+  mssql-data:
+    driver: local
