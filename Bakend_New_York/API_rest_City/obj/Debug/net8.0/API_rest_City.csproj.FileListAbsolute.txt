@@ -76,3 +76,4 @@ C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_N
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

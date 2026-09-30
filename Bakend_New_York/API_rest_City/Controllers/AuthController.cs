@@ -62,7 +62,14 @@ namespace API_rest_City.Controllers
                     Rol = vw_usuario.NOMBRE_ROL
                 };
 
-                return Ok(_jwtService.GenerarToken(usuario));
+                var loginResponse = _jwtService.GenerarToken(usuario);
+
+                return Ok(new {
+                    codigo = 200,
+                    mensaje = "Login exitoso",
+                    token = loginResponse.Token,
+                    usuario = usuario
+                });
             }
             catch (Exception ex)
             {
@@ -103,6 +110,32 @@ namespace API_rest_City.Controllers
             catch (Exception ex)
             {
                 respuesta = new ResponseDto { codigo = 500, data = null, mensaje = "CrearUsuario(): " + ex.Message };
+                return StatusCode(500, respuesta);
+            }
+        }
+
+        [HttpGet("roles")]
+        public async Task<IActionResult> ObtenerRoles()
+        {
+            ResponseDto respuesta = new ResponseDto();
+
+            try
+            {
+                AuthDTO authDTO = new AuthDTO();
+                authDTO.SetConexion(_dbConnectionFactory);
+
+                respuesta = await authDTO.ObtenerRoles();
+
+                if (respuesta.codigo != 200)
+                {
+                    return BadRequest(respuesta);
+                }
+
+                return Ok(respuesta);
+            }
+            catch (Exception ex)
+            {
+                respuesta = new ResponseDto { codigo = 500, data = null, mensaje = "ObtenerRoles(): " + ex.Message };
                 return StatusCode(500, respuesta);
             }
         }

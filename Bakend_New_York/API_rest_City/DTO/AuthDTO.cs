@@ -3,6 +3,9 @@ using API_rest_City.BD;
 using API_rest_City.Models;
 using Microsoft.Data.SqlClient;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace API_rest_City.DTO
 {
@@ -21,6 +24,13 @@ namespace API_rest_City.DTO
             _dbConnectionFactory = dbConexion;
         }
 
+        private string HashPassword(string password)
+        {
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+        }
+
         public async Task<ResponseDto> Login(LoginRequest request)
         {
             ResponseDto respuesta = new ResponseDto();
@@ -30,16 +40,18 @@ namespace API_rest_City.DTO
                 using var connection = _dbConnectionFactory!.CreateConnection();
                 connection.Open();
 
-                string sql = @"SELECT u.id_usuario AS ID_USUARIO, u.nombre_usuario AS NOMBRE_USUARIO, 
-                               u.apellidos_usuario AS APELLIDOS_USUARIO, u.correo AS CORREO, 
-                               u.contrasena AS CONTRASENA, r.id_rol AS ID_ROL, 
-                               r.nombre_rol AS NOMBRE_ROL, u.activo AS ACTIVO
-                               FROM Usuario u
-                               INNER JOIN UsuarioRol ur ON u.id_usuario = ur.id_usuario
-                               INNER JOIN RolUsuario r ON ur.id_rol_usuario = r.id_rol
-                               WHERE u.correo = @Correo AND u.contrasena = @Contrasena AND u.activo = 1";
+                var hashedPassword = HashPassword(request.Contrasena);
 
-                var result = await connection.QueryAsync<VW_Usuario>(sql, new { request.Correo, request.Contrasena });
+                var parameters = new DynamicParameters();
+                parameters.Add("@Correo", request.Correo);
+                parameters.Add("@Contrasena", hashedPassword);
+
+                var result = await connection.QueryAsync<VW_Usuario>(
+                    "SP_Login",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
                 VW_Usuario? vw_usuario = result.FirstOrDefault();
 
                 if (vw_usuario == null)
@@ -67,41 +79,69 @@ namespace API_rest_City.DTO
                 using var connection = _dbConnectionFactory!.CreateConnection();
                 connection.Open();
 
-                using var transaction = connection.BeginTransaction();
+                var hashedPassword = HashPassword(request.Contrasena);
 
-                try
+                var parameters = new DynamicParameters();
+                parameters.Add("@NombreUsuario", request.NombreUsuario);
+                parameters.Add("@ApellidosUsuario", request.ApellidosUsuario);
+                parameters.Add("@Correo", request.Correo);
+                parameters.Add("@Contrasena", hashedPassword);
+                parameters.Add("@IdRol", request.IdRol);
+
+                var result = await connection.QueryFirstOrDefaultAsync<dynamic>(
+                    "SP_CrearUsuario",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (result != null)
                 {
-                    string sqlUsuario = @"INSERT INTO Usuario (nombre_usuario, apellidos_usuario, correo, contrasena)
-                                         VALUES (@NombreUsuario, @ApellidosUsuario, @Correo, @Contrasena);
-                                         SELECT SCOPE_IDENTITY();";
+                    int idUsuario = (int)result.IdUsuario;
+                    string mensaje = (string)result.Mensaje;
 
-                    int idUsuario = await connection.ExecuteScalarAsync<int>(sqlUsuario, new
+                    if (idUsuario == -1)
                     {
-                        request.NombreUsuario,
-                        request.ApellidosUsuario,
-                        request.Correo,
-                        request.Contrasena
-                    }, transaction);
-
-                    string sqlRol = @"INSERT INTO UsuarioRol (id_usuario, id_rol_usuario)
-                                      VALUES (@IdUsuario, @IdRol)";
-                    await connection.ExecuteAsync(sqlRol, new { IdUsuario = idUsuario, request.IdRol }, transaction);
-
-                    transaction.Commit();
+                        return new ResponseDto { codigo = 400, mensaje = mensaje, data = null };
+                    }
 
                     respuesta.codigo = 200;
                     respuesta.data = idUsuario;
-                    respuesta.mensaje = "Usuario creado exitosamente";
+                    respuesta.mensaje = mensaje;
                 }
-                catch (Exception ex)
+                else
                 {
-                    transaction.Rollback();
-                    throw new Exception(ex.Message);
+                    respuesta.codigo = 500;
+                    respuesta.mensaje = "Error al crear usuario";
                 }
             }
             catch (Exception ex)
             {
                 respuesta = new ResponseDto { codigo = 500, mensaje = "CrearUsuario(): " + ex.Message, data = null };
+            }
+            return respuesta;
+        }
+
+        public async Task<ResponseDto> ObtenerRoles()
+        {
+            ResponseDto respuesta = new ResponseDto();
+
+            try
+            {
+                using var connection = _dbConnectionFactory!.CreateConnection();
+                connection.Open();
+
+                var result = await connection.QueryAsync<Rol>(
+                    "SP_ObtenerRoles",
+                    commandType: CommandType.StoredProcedure
+                );
+
+                respuesta.codigo = 200;
+                respuesta.data = result.ToList();
+                respuesta.mensaje = "Roles obtenidos exitosamente";
+            }
+            catch (Exception ex)
+            {
+                respuesta = new ResponseDto { codigo = 500, mensaje = "ObtenerRoles(): " + ex.Message, data = null };
             }
             return respuesta;
         }
