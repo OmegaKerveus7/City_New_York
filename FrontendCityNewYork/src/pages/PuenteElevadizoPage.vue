@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import { puenteService, type PuenteEstado } from '@/api/puenteService'
 
 const bridges = ref([
   { id: 1, nombre: 'Puente de Brooklyn', estado: 'Operativo', ultimaInspeccion: '2024-01-15', nivel: 'Alto', estadoPuente: 'Elevado' },
@@ -12,6 +13,49 @@ const bridges = ref([
 
 const selectedBridge = ref<typeof bridges.value[0] | null>(null)
 const showModal = ref(false)
+const servoEstado = ref<PuenteEstado | null>(null)
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+const obtenerEstado = async () => {
+  try {
+    error.value = null
+    servoEstado.value = await puenteService.obtenerEstado()
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Error al conectar con el puente'
+    servoEstado.value = null
+  }
+}
+
+const abrirPuente = async () => {
+  loading.value = true
+  try {
+    error.value = null
+    servoEstado.value = await puenteService.abrir()
+    bridges.value[0].estadoPuente = servoEstado.value.estado === 'ABIERTO' ? 'Elevado' : 'Bajo'
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Error al abrir el puente'
+  } finally {
+    loading.value = false
+  }
+}
+
+const cerrarPuente = async () => {
+  loading.value = true
+  try {
+    error.value = null
+    servoEstado.value = await puenteService.cerrar()
+    bridges.value[0].estadoPuente = servoEstado.value.estado === 'ABIERTO' ? 'Elevado' : 'Bajo'
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Error al cerrar el puente'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  obtenerEstado()
+})
 
 const openDetails = (bridge: typeof bridges.value[0]) => {
   selectedBridge.value = bridge
@@ -59,6 +103,66 @@ const getLevelClass = (nivel: string) => {
         <div class="banner-text">
           <h2>Puente Elevadizo</h2>
           <p>Control y monitoreo de puentes levadizos de entrada a la ciudad</p>
+        </div>
+      </div>
+
+      <div class="servo-control animate-fade-in-up delay-1">
+        <div class="servo-header">
+          <h3>Control Físico del Puente</h3>
+          <button class="btn-refresh" @click="obtenerEstado" :disabled="loading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+            </svg>
+          </button>
+        </div>
+        <div class="servo-content">
+          <div class="servo-status">
+            <div class="status-indicator" :class="servoEstado?.estado === 'ABIERTO' ? 'status-open' : 'status-closed'">
+              <svg v-if="servoEstado?.estado === 'ABIERTO'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 15l-6-6-6 6" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+              <span>{{ servoEstado?.estado || 'DESCONECTADO' }}</span>
+            </div>
+            <div class="servo-info">
+              <div class="info-item">
+                <span class="info-label">Ángulo:</span>
+                <span class="info-value">{{ servoEstado?.angulo ?? '--' }}°</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Mega:</span>
+                <span class="info-value" :class="servoEstado?.megaOnline ? 'online' : 'offline'">
+                  {{ servoEstado?.megaOnline ? 'ONLINE' : 'OFFLINE' }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Esclavo:</span>
+                <span class="info-value" :class="servoEstado?.esclavoOnline ? 'online' : 'offline'">
+                  {{ servoEstado?.esclavoOnline ? 'ONLINE' : 'OFFLINE' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div v-if="error" class="servo-error">
+            {{ error }}
+          </div>
+          <div class="servo-actions">
+            <button class="btn-servo btn-open" @click="abrirPuente" :disabled="loading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 15l-6-6-6 6" />
+              </svg>
+              ABRIR
+            </button>
+            <button class="btn-servo btn-close" @click="cerrarPuente" :disabled="loading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+              CERRAR
+            </button>
+          </div>
         </div>
       </div>
 
@@ -623,5 +727,183 @@ tr:hover {
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Servo Control */
+.servo-control {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.servo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.servo-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--nyc-navy);
+}
+
+.btn-refresh {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--nyc-gray-100);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nyc-steel);
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: var(--nyc-gray-200);
+  color: var(--nyc-navy);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-refresh svg {
+  width: 18px;
+  height: 18px;
+}
+
+.servo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.servo-status {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.status-indicator svg {
+  width: 24px;
+  height: 24px;
+}
+
+.status-open {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16A34A;
+}
+
+.status-closed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #DC2626;
+}
+
+.servo-info {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.info-label {
+  font-size: 0.7rem;
+  color: var(--nyc-steel);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--nyc-navy);
+}
+
+.info-value.online {
+  color: #16A34A;
+}
+
+.info-value.offline {
+  color: #DC2626;
+}
+
+.servo-error {
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #DC2626;
+  font-size: 0.85rem;
+}
+
+.servo-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.btn-servo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-servo svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-servo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-open {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16A34A;
+}
+
+.btn-open:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.3);
+}
+
+.btn-close {
+  background: rgba(239, 68, 68, 0.15);
+  color: #DC2626;
+}
+
+.btn-close:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
 }
 </style>

@@ -54,6 +54,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<DBContext>();
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddHttpClient();
 
 var jwtKey = builder.Configuration["Jwt:Key"]!
     ?? throw new InvalidOperationException("Jwt:Key no está configurada.");

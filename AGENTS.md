@@ -4,6 +4,89 @@
 - `Bakend_New_York/API_rest_City/` — ASP.NET Core 8 minimal API project
 - `BD_New_York/Conetnedor/docker-compose.yml` — SQL Server 2022 container
 - `FrontendCityNewYork/` — Vue 3 frontend con diseño NYC y estructura en capas
+- `Componentes_fisicos/` — Arduino/ESP32 código para control físico del puente
+
+## Hardware - Control de Puente Elevadizo
+
+### Arquitectura de Comunicación
+```
+Frontend (Vue) → Backend (ASP.NET) → ESP32 (ngrok) → Mega (UART) → Esclavo (I2C) → Servo
+                          ↑
+                    Polling cada 5s
+```
+
+### Componentes
+| Dispositivo | Rol | Descripción |
+|-------------|-----|-------------|
+| ESP32 | Gateway WiFi + HTTP Server | Recibe polling del backend, envía comandos al Mega por UART con TXS0108E |
+| Arduino Mega | Gateway I2C | Reenvía comandos al esclavo por I2C (0x08) |
+| Arduino Uno (Esclavo) | Controlador Servo | Controla el servo MG996R en pin 9 |
+
+### Conexiones Físicas
+```
+ESP32 (UART) → TXS0108E → Mega (Serial1)
+Mega (I2C) → Esclavo (0x08)
+Esclavo (Pin 9) → Servo MG996R
+```
+
+### Endpoints del ESP32 (puerto 80)
+| Ruta | Método | Descripción |
+|------|--------|-------------|
+| `/abrir` | POST | Mueve servo a 85° (ABIERTO) |
+| `/cerrar` | POST | Mueve servo a 180° (CERRADO) |
+| `/estado` | GET | Retorna estado: { estado, angulo, megaOnline, esclavoOnline } |
+| `/actualizar?angulo=n` | POST | Mueve servo a n grados (0-180) |
+| `/verificar` | GET | Heartbeat del ESP32 |
+
+### Botones Locales (GPIO)
+| Pin | Función |
+|-----|---------|
+| GPIO 32 | Botón ABRIR físico |
+| GPIO 33 | Botón CERRAR físico |
+
+### Sistema de Instrucciones
+
+#### Tablas BD
+- `Instruccion` - Catálogo de instrucciones (Esc1X0100, Esc1X0200, etc.)
+- `Permiso` - Permisos por rol para ejecutar instrucciones
+- `Log_Instruccion` - Historial de ejecuciones
+- `Dispositivo` - Registro de ESP32, Mega, Esclavo
+- `Instruccion_Pendiente` - Cola de instrucciones por procesar
+
+#### Códigos de Instrucciones
+| Código | Componente | Descripción |
+|--------|------------|-------------|
+| Esc1X0100 | Esc1 | Subir puente (ABRIR) - 85° |
+| Esc1X0200 | Esc1 | Bajar puente (CERRAR) - 180° |
+
+#### Endpoints Backend
+| Ruta | Método | Descripción |
+|------|--------|-------------|
+| `GET /api/instrucciones` | GET | Lista todas las instrucciones |
+| `GET /api/instrucciones/pendientes/{tipo}` | GET | ESP32 consulta instrucciones pendientes |
+| `POST /api/instrucciones` | POST | Crear instrucción pendiente |
+| `POST /api/instrucciones/{id}/respuesta` | POST | ESP32 envía resultado de ejecución |
+| `POST /api/instrucciones/local` | POST | Notificación de ejecución local (botón físico) |
+| `GET /api/instrucciones/log` | GET | Historial de ejecuciones |
+| `GET /api/instrucciones/verificar/{tipo}` | GET | Heartbeat del dispositivo |
+| `GET /api/puente/estado` | GET | Estado del servo |
+| `POST /api/puente/abrir` | POST | Crear instrucción ABRIR |
+| `POST /api/puente/cerrar` | POST | Crear instrucción CERRAR |
+| `GET /api/puente/log` | GET | Log del puente |
+| `GET /api/puente/dispositivos` | GET | Estado de dispositivos |
+
+### Archivos Arduino
+- `Componentes_fisicos/Esp32_gateway/Esp32_gateway.ino` — ESP32 gateway WiFi-UART con polling
+- `Componentes_fisicos/Mega_NY/Mega_NY.ino` — Mega gateway I2C-UART
+- `Componentes_fisicos/esclavo_frontera/esclavo_frontera.ino` — Arduino Uno con servo MG996R
+
+### Archivos BD
+- `BD_New_York/Conetnedor/Setup_Instrucciones.sql` — Tablas del sistema de instrucciones
+- `BD_New_York/Conetnedor/StoredProcedures_Instrucciones.sql` — SPs para instrucciones
+
+### Configuración
+- Backend ngrok: `https://warless-predestinately-bethann.ngrok-free.dev`
+- WiFi ESP32: Omega / d5adc4a32689
 
 ## Run the API
 ```bash

@@ -42,6 +42,136 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "API_rest_City.Controllers.InstruccionesController",
+    "Method": "ObtenerInstrucciones",
+    "RelativePath": "api/Instrucciones",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.InstruccionesController",
+    "Method": "CrearInstruccion",
+    "RelativePath": "api/Instrucciones",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_rest_City.Controllers.CrearInstruccionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.InstruccionesController",
+    "Method": "RegistrarLocal",
+    "RelativePath": "api/Instrucciones/local",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_rest_City.Controllers.LocalRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.InstruccionesController",
+    "Method": "ObtenerLog",
+    "RelativePath": "api/Instrucciones/log",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "limite",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.InstruccionesController",
+    "Method": "ObtenerPendientes",
+    "RelativePath": "api/Instrucciones/pendientes",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.InstruccionesController",
+    "Method": "RegistrarRespuesta",
+    "RelativePath": "api/Instrucciones/respuesta",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_rest_City.Controllers.RespuestaRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.PuenteController",
+    "Method": "AbrirPuente",
+    "RelativePath": "api/Puente/abrir",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.PuenteController",
+    "Method": "CerrarPuente",
+    "RelativePath": "api/Puente/cerrar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.PuenteController",
+    "Method": "ObtenerEstado",
+    "RelativePath": "api/Puente/estado",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.PuenteController",
+    "Method": "ObtenerLog",
+    "RelativePath": "api/Puente/log",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "limite",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API_rest_City.Controllers.TestController",
     "Method": "TestConexion",
     "RelativePath": "api/Test/conexion",
