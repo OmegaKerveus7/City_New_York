@@ -17,38 +17,47 @@ namespace API_rest_City.Controllers
         }
 
         [HttpGet("estado")]
-        public async Task<IActionResult> ObtenerEstado()
+        public IActionResult ObtenerEstado()
         {
             try
             {
-                using var client = new HttpClient();
-                client.Timeout = TimeSpan.FromSeconds(10);
+                using var connection = _dbContext.CreateConnection();
+                var ultimoLog = connection.QueryFirstOrDefault<dynamic>(
+                    @"SELECT TOP 1 
+                        CASE WHEN resultado = 'OK' THEN 'ABIERTO' ELSE 'CERRADO' END AS estado,
+                        angulo_resultado AS angulo
+                      FROM Log_Instruccion 
+                      ORDER BY fecha_ejecucion DESC"
+                );
 
-                var response = await client.GetAsync($"{esp32BaseUrl}/estado");
-
-                if (response.IsSuccessStatusCode)
+                if (ultimoLog != null)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    return Ok(content);
+                    return Ok(new
+                    {
+                        estado = ultimoLog.estado,
+                        angulo = ultimoLog.angulo ?? 0,
+                        megaOnline = true,
+                        esclavoOnline = true
+                    });
                 }
 
-                return StatusCode((int)response.StatusCode, new
+                return Ok(new
                 {
-                    error = "Error al conectar con el ESP32",
-                    mensaje = response.StatusCode.ToString()
+                    estado = "CERRADO",
+                    angulo = 180,
+                    megaOnline = false,
+                    esclavoOnline = false
                 });
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                return StatusCode(503, new
+                return Ok(new
                 {
-                    error = "ESP32 no disponible",
-                    mensaje = ex.Message
+                    estado = "CERRADO",
+                    angulo = 180,
+                    megaOnline = false,
+                    esclavoOnline = false
                 });
-            }
-            catch (TaskCanceledException)
-            {
-                return StatusCode(504, new { error = "Timeout esperando respuesta del ESP32" });
             }
         }
 

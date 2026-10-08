@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import DashboardLayout from '@/layouts/DashboardLayout.vue'
 </script>
 
 <template>
-  <DashboardLayout>
-    <div class="central-park">
+  <div class="central-park">
       <div class="welcome-banner animate-fade-in-up">
         <div class="banner-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -138,7 +136,6 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
         </div>
       </div>
     </div>
-  </DashboardLayout>
 </template>
 
 <style scoped>

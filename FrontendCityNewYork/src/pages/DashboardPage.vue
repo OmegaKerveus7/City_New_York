@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { useAuthStore } from '@/stores'
 
 const authStore = useAuthStore()
 </script>
 
 <template>
-  <DashboardLayout>
-    <div class="city-dashboard">
+  <div class="city-dashboard">
       <div class="welcome-banner animate-fade-in-up">
         <div class="welcome-text">
           <h2>¡Bienvenido, {{ authStore.usuario?.NombreUsuario }}!</h2>
@@ -142,7 +140,6 @@ const authStore = useAuthStore()
         </div>
       </div>
     </div>
-  </DashboardLayout>
 </template>
 
 <style scoped>

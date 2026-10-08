@@ -27,6 +27,11 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
 
+  --card-bg: var(--nyc-white);
+  --border-color: var(--nyc-gray-200);
+  --text-primary: var(--nyc-navy);
+  --text-secondary: var(--nyc-steel);
+
   font-family: var(--font-sans);
   line-height: 1.5;
   font-synthesis: none;

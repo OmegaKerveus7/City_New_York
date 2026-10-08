@@ -44,36 +44,47 @@ Esclavo (Pin 9) → Servo MG996R
 | GPIO 32 | Botón ABRIR físico |
 | GPIO 33 | Botón CERRAR físico |
 
-### Sistema de Instrucciones
+### Sistema de Instrucciones (Simplificado)
 
 #### Tablas BD
-- `Instruccion` - Catálogo de instrucciones (Esc1X0100, Esc1X0200, etc.)
-- `Permiso` - Permisos por rol para ejecutar instrucciones
+- `Instruccion` - Catálogo de instrucciones simples (SERVO_SUBIR, SERVO_BAJAR, etc.)
+- `Instruccion_Pendiente` - Cola de instrucciones pendientes por procesar
 - `Log_Instruccion` - Historial de ejecuciones
-- `Dispositivo` - Registro de ESP32, Mega, Esclavo
-- `Instruccion_Pendiente` - Cola de instrucciones por procesar
 
-#### Códigos de Instrucciones
-| Código | Componente | Descripción |
-|--------|------------|-------------|
-| Esc1X0100 | Esc1 | Subir puente (ABRIR) - 85° |
-| Esc1X0200 | Esc1 | Bajar puente (CERRAR) - 180° |
+#### Instrucciones Disponibles
+| Nombre | Descripcion |
+|--------|-------------|
+| SERVO_SUBIR | Subir puente elevadizo |
+| SERVO_BAJAR | Bajar puente elevadizo |
+| SERVO_STOP | Detener servo |
+| PING | Verificar conexion |
 
-#### Endpoints Backend
-| Ruta | Método | Descripción |
+#### Endpoints Backend (Simplificados)
+| Ruta | Metodo | Descripcion |
 |------|--------|-------------|
 | `GET /api/instrucciones` | GET | Lista todas las instrucciones |
-| `GET /api/instrucciones/pendientes/{tipo}` | GET | ESP32 consulta instrucciones pendientes |
-| `POST /api/instrucciones` | POST | Crear instrucción pendiente |
-| `POST /api/instrucciones/{id}/respuesta` | POST | ESP32 envía resultado de ejecución |
-| `POST /api/instrucciones/local` | POST | Notificación de ejecución local (botón físico) |
+| `POST /api/instrucciones` | POST | Crea instruccion pendiente { nombre: "SERVO_SUBIR" } |
+| `GET /api/instrucciones/pendientes` | GET | ESP32 consulta aqui (polling cada 5s) |
+| `POST /api/instrucciones/respuesta` | POST | ESP32 envia respuesta { idPendiente, resultado, angulo } |
+| `POST /api/instrucciones/local` | POST | Notificacion de boton local |
 | `GET /api/instrucciones/log` | GET | Historial de ejecuciones |
-| `GET /api/instrucciones/verificar/{tipo}` | GET | Heartbeat del dispositivo |
-| `GET /api/puente/estado` | GET | Estado del servo |
-| `POST /api/puente/abrir` | POST | Crear instrucción ABRIR |
-| `POST /api/puente/cerrar` | POST | Crear instrucción CERRAR |
+| `GET /api/puente/estado` | GET | Estado del servo (desde ESP32) |
+| `POST /api/puente/abrir` | POST | Crea instruccion SERVO_SUBIR |
+| `POST /api/puente/cerrar` | POST | Crea instruccion SERVO_BAJAR |
 | `GET /api/puente/log` | GET | Log del puente |
-| `GET /api/puente/dispositivos` | GET | Estado de dispositivos |
+
+#### Flujo de Comunicacion
+```
+Frontend -->> Backend: POST /api/puente/abrir
+Backend -->> BD: Inserta en Instruccion_Pendiente
+ESP32 <<-- Backend: GET /api/instrucciones/pendientes (cada 5s)
+ESP32 -->> Mega: SERVO_SUBIR (tal cual, sin traduccion)
+Mega -->> Esclavo: SERVO_SUBIR (por I2C)
+Esclavo -->> Mega: POS:angulo
+Mega -->> ESP32: RESP POS:angulo
+ESP32 -->> Backend: POST /api/instrucciones/respuesta
+Backend -->> BD: Actualiza Log_Instruccion
+```
 
 ### Archivos Arduino
 - `Componentes_fisicos/Esp32_gateway/Esp32_gateway.ino` — ESP32 gateway WiFi-UART con polling
@@ -81,8 +92,7 @@ Esclavo (Pin 9) → Servo MG996R
 - `Componentes_fisicos/esclavo_frontera/esclavo_frontera.ino` — Arduino Uno con servo MG996R
 
 ### Archivos BD
-- `BD_New_York/Conetnedor/Setup_Instrucciones.sql` — Tablas del sistema de instrucciones
-- `BD_New_York/Conetnedor/StoredProcedures_Instrucciones.sql` — SPs para instrucciones
+- `BD_New_York/Conetnedor/Setup_Instrucciones_Simple.sql` — Tablas simplificadas del sistema
 
 ### Configuración
 - Backend ngrok: `https://warless-predestinately-bethann.ngrok-free.dev`
