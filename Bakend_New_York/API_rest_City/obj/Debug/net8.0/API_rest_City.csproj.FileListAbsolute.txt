@@ -100,3 +100,4 @@ C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.de
 C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.runtimeconfig.json
 C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.dll
 C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.pdb
+C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
