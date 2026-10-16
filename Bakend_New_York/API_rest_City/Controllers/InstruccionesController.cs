@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Dapper;
 using API_rest_City.BD;
+using API_rest_City.Services;
+using System.Data;
 
 namespace API_rest_City.Controllers
 {
@@ -9,10 +11,12 @@ namespace API_rest_City.Controllers
     public class InstruccionesController : ControllerBase
     {
         private readonly DBContext _dbContext;
+        private readonly InstruccionService _instrucciones;
 
-        public InstruccionesController(DBContext dbContext)
+        public InstruccionesController(DBContext dbContext, InstruccionService instrucciones)
         {
             _dbContext = dbContext;
+            _instrucciones = instrucciones;
         }
 
         // GET /api/instrucciones - Lista todas las instrucciones
@@ -40,19 +44,39 @@ namespace API_rest_City.Controllers
             try
             {
                 using var connection = _dbContext.CreateConnection();
+                connection.Open();
+                using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
 
                 var sql = @"
                     SELECT TOP 1
                         ip.id_pendiente AS Id,
                         i.nombre AS Nombre,
                         i.descripcion AS Descripcion
-                    FROM Instruccion_Pendiente ip
+                    FROM Instruccion_Pendiente ip WITH (UPDLOCK, ROWLOCK)
                     INNER JOIN Instruccion i ON ip.id_instruccion = i.id_instruccion
-                    WHERE ip.procesada = 0 AND i.activa = 1
+                    WHERE ip.procesada = 0
+                      AND i.activa = 1
+                      AND (
+                          ip.fecha_procesamiento IS NULL
+                          OR ip.fecha_procesamiento < DATEADD(SECOND, -30, GETDATE())
+                      )
                     ORDER BY ip.fecha_creacion ASC";
 
-                var pendientes = connection.Query<dynamic>(sql);
-                return Ok(pendientes);
+                var pendiente = connection.QueryFirstOrDefault<dynamic>(sql, transaction: transaction);
+                if (pendiente == null)
+                {
+                    transaction.Commit();
+                    return Ok(Array.Empty<object>());
+                }
+
+                int idPendiente = Convert.ToInt32(pendiente.Id);
+                connection.Execute(
+                    "UPDATE Instruccion_Pendiente SET fecha_procesamiento = GETDATE() WHERE id_pendiente = @id AND procesada = 0",
+                    new { id = idPendiente },
+                    transaction);
+
+                transaction.Commit();
+                return Ok(new[] { (object)pendiente });
             }
             catch (Exception ex)
             {
@@ -61,26 +85,26 @@ namespace API_rest_City.Controllers
         }
 
         // POST /api/instrucciones - Crear instruccion pendiente (desde frontend)
+        // Solo se envia el nombre: si no existe en el catalogo se crea automaticamente.
         [HttpPost]
         public IActionResult CrearInstruccion([FromBody] CrearInstruccionRequest request)
         {
             try
             {
-                using var connection = _dbContext.CreateConnection();
+                if (string.IsNullOrWhiteSpace(request.Nombre))
+                    return BadRequest(new { error = "El nombre de la instruccion es obligatorio" });
 
-                var sql = @"
-                    INSERT INTO Instruccion_Pendiente (id_instruccion)
-                    SELECT id_instruccion FROM Instruccion WHERE nombre = @nombre AND activa = 1;
-                    SELECT SCOPE_IDENTITY() AS Id;";
+                var resultado = _instrucciones.CrearPendiente(request.Nombre);
 
-                var result = connection.QueryFirstOrDefault<dynamic>(sql, new { nombre = request.Nombre });
-
-                if (result == null || result.Id == null)
+                return Ok(new
                 {
-                    return BadRequest(new { error = "Instruccion no encontrada" });
-                }
-
-                return Ok(new { id = result.Id, mensaje = "Instruccion creada", nombre = request.Nombre });
+                    id = resultado.Id,
+                    mensaje = resultado.YaEstabaPendiente
+                        ? "La instruccion ya estaba pendiente; no se duplico"
+                        : "Instruccion creada",
+                    nombre = request.Nombre,
+                    yaEstabaPendiente = resultado.YaEstabaPendiente
+                });
             }
             catch (Exception ex)
             {

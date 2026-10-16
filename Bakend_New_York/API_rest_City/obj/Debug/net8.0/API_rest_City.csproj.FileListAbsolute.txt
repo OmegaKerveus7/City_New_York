@@ -76,4 +76,27 @@ C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_N
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
-C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\appsettings.Development.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\appsettings.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\API_rest_City.staticwebassets.endpoints.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\API_rest_City.exe
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\API_rest_City.deps.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\API_rest_City.runtimeconfig.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\API_rest_City.dll
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-3000\API_rest_City.pdb
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\appsettings.Development.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\appsettings.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\API_rest_City.staticwebassets.endpoints.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\API_rest_City.exe
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\API_rest_City.deps.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\API_rest_City.runtimeconfig.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\API_rest_City.dll
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-dedupe\API_rest_City.pdb
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\appsettings.Development.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\appsettings.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.staticwebassets.endpoints.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.exe
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.deps.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.runtimeconfig.json
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.dll
+C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.pdb

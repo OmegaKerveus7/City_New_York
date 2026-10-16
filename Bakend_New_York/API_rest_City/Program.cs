@@ -54,6 +54,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<DBContext>();
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddSingleton<InstruccionService>();
 builder.Services.AddHttpClient();
 
 var jwtKey = builder.Configuration["Jwt:Key"]!

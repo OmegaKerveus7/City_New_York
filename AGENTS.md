@@ -6,6 +6,28 @@
 - `FrontendCityNewYork/` — Vue 3 frontend con diseño NYC y estructura en capas
 - `Componentes_fisicos/` — Arduino/ESP32 código para control físico del puente
 
+## Hardware - Teleferico
+
+### Endpoints Backend
+| Ruta | Metodo | Descripcion |
+|------|--------|-------------|
+| `POST /api/teleferico/avanzar` | POST | Avanzar teleferico (3000 pasos por defecto; pasos opcionales) |
+| `POST /api/teleferico/regresar` | POST | Regresar teleferico (3000 pasos por defecto; pasos opcionales) |
+| `POST /api/teleferico/parar` | POST | Detener teleferico |
+| `GET /api/teleferico/log` | GET | Historial de instrucciones teleferico |
+
+### Instrucciones BD
+| Nombre | Descripcion |
+|--------|-------------|
+| TELEFERICO_AVANZAR | Avanzar teleferico N pasos |
+| TELEFERICO_REGRESAR | Regresar teleferico N pasos |
+| TELEFERICO_PARAR | Detener teleferico |
+
+### Archivos
+- `TelefericoController.cs` — Controlador del teleferico
+- `FrontendCityNewYork/src/pages/TelefericoPage.vue` — Pagina de control
+- `Componentes_fisicos/esclavo_frontera/esclavo_frontera.ino` — Codigo del esclavo con teleferico
+
 ## Hardware - Control de Puente Elevadizo
 
 ### Arquitectura de Comunicación

@@ -34,6 +34,12 @@ const menuItems = [
         label: 'Puente Elevadizo',
         icon: 'bridge',
         route: '/puente-elevadizo'
+      },
+      {
+        id: 'teleferico',
+        label: 'Teleferico',
+        icon: 'cable',
+        route: '/teleferico'
       }
     ]
   }
@@ -114,6 +120,10 @@ const toggleMenu = (menuId: string) => {
                   <svg v-if="child.icon === 'bridge'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                     <line x1="4" y1="22" x2="4" y2="15" />
+                  </svg>
+                  <svg v-if="child.icon === 'cable'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M2 12h20M7 7l-5 5M17 7l5 5M7 17l-5-5M17 17l5-5" />
+                    <circle cx="12" cy="12" r="2" />
                   </svg>
                 </span>
                 <span class="nav-label">{{ child.label }}</span>

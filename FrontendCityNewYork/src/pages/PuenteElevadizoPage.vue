@@ -1,21 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { puenteService, type PuenteEstado } from '@/api/puenteService'
+import { ref } from 'vue'
+import { puenteService } from '@/api/puenteService'
 
-const servoEstado = ref<PuenteEstado | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
-
-const isAbierto = computed(() => servoEstado.value?.estado === 'ABIERTO')
-
-const obtenerEstado = async () => {
-  try {
-    error.value = null
-    servoEstado.value = await puenteService.obtenerEstado()
-  } catch (e: any) {
-    error.value = 'No se pudo conectar'
-  }
-}
 
 const subirPuente = async () => {
   if (loading.value) return
@@ -23,7 +11,6 @@ const subirPuente = async () => {
   try {
     error.value = null
     await puenteService.abrir()
-    setTimeout(obtenerEstado, 1500)
   } catch (e: any) {
     error.value = 'Error al subir el puente'
   } finally {
@@ -37,15 +24,12 @@ const bajarPuente = async () => {
   try {
     error.value = null
     await puenteService.cerrar()
-    setTimeout(obtenerEstado, 1500)
   } catch (e: any) {
     error.value = 'Error al bajar el puente'
   } finally {
     loading.value = false
   }
 }
-
-obtenerEstado()
 </script>
 
 <template>
@@ -56,28 +40,6 @@ obtenerEstado()
     </div>
 
     <div class="puente-control">
-      <div class="estado-actual">
-        <span class="estado-label">Estado:</span>
-        <span class="estado-badge" :class="isAbierto ? 'estado-abierto' : 'estado-cerrado'">
-          {{ servoEstado?.estado || 'DESCONECTADO' }}
-        </span>
-      </div>
-
-      <div class="control-info">
-        <div class="info-row">
-          <span class="label">Angulo:</span>
-          <span class="value">{{ servoEstado?.angulo ?? '--' }}°</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Mega:</span>
-          <span class="status-dot" :class="servoEstado?.megaOnline ? 'online' : 'offline'"></span>
-        </div>
-        <div class="info-row">
-          <span class="label">Esclavo:</span>
-          <span class="status-dot" :class="servoEstado?.esclavoOnline ? 'online' : 'offline'"></span>
-        </div>
-      </div>
-
       <div class="botones">
         <button class="btn btn-subir" @click="subirPuente" :disabled="loading">
           SUBIR PUENTE
@@ -119,79 +81,6 @@ obtenerEstado()
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 2rem;
-}
-
-.estado-actual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.estado-label {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-}
-
-.estado-badge {
-  padding: 0.5rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  font-size: 1.2rem;
-}
-
-.estado-abierto {
-  background: rgba(34, 197, 94, 0.2);
-  color: #16A34A;
-}
-
-.estado-cerrado {
-  background: rgba(239, 68, 68, 0.2);
-  color: #DC2626;
-}
-
-.control-info {
-  margin-bottom: 1.5rem;
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.info-row .label {
-  color: var(--text-secondary);
-}
-
-.info-row .value {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.status-dot.online {
-  background: #16A34A;
-  box-shadow: 0 0 8px rgba(22, 163, 74, 0.5);
-}
-
-.status-dot.offline {
-  background: #DC2626;
-  box-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
 }
 
 .botones {

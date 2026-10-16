@@ -34,6 +34,12 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Puente Elevadizo' }
     },
     {
+      path: '/teleferico',
+      name: 'teleferico',
+      component: () => import('@/pages/TelefericoPage.vue'),
+      meta: { requiresAuth: true, title: 'Teleferico' }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }
