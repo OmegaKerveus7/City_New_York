@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -40,6 +41,12 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Teleferico' }
     },
     {
+      path: '/empire-state/elevador',
+      name: 'empire-state-elevador',
+      component: () => import('@/pages/ElevadorPage.vue'),
+      meta: { requiresAuth: true, title: 'Empire State - Elevador' }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }
@@ -53,18 +60,12 @@ router.beforeEach((to, _from, next) => {
     isInitialized = true
   }
 
-  if (to.meta.requiresAuth) {
-    if (!localStorage.getItem('token')) {
-      next('/login')
-    } else {
-      next()
-    }
-  } else if (to.meta.requiresGuest) {
-    if (localStorage.getItem('token')) {
-      next('/')
-    } else {
-      next()
-    }
+  const authStore = useAuthStore()
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next({ name: 'login' })
+  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next({ name: 'dashboard' })
   } else {
     next()
   }

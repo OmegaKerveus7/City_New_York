@@ -47,3 +47,15 @@ INSERT INTO Instruccion (nombre, descripcion) VALUES ('SERVO_SUBIR', 'Subir puen
 INSERT INTO Instruccion (nombre, descripcion) VALUES ('SERVO_BAJAR', 'Bajar puente elevadizo');
 INSERT INTO Instruccion (nombre, descripcion) VALUES ('SERVO_STOP', 'Detener servo');
 INSERT INTO Instruccion (nombre, descripcion) VALUES ('PING', 'Verificar conexion');
+
+-- =====================================================
+-- Instrucciones del Elevador del Empire State
+-- (Los comandos con parametro como SUBIR_NIVEL 2 o IR_A_NIVEL 3
+--  se crean automaticamente al encolarse)
+-- =====================================================
+INSERT INTO Instruccion (nombre, descripcion) VALUES ('SUBIR_NIVEL', 'Subir N niveles del elevador');
+INSERT INTO Instruccion (nombre, descripcion) VALUES ('BAJAR_NIVEL', 'Bajar N niveles del elevador');
+INSERT INTO Instruccion (nombre, descripcion) VALUES ('IR_A_NIVEL', 'Ir al nivel N del elevador');
+INSERT INTO Instruccion (nombre, descripcion) VALUES ('ELEVADOR_PARAR', 'Detener elevador');
+INSERT INTO Instruccion (nombre, descripcion) VALUES ('ELEVADOR_STATUS', 'Reportar estado del elevador');
+INSERT INTO Instruccion (nombre, descripcion) VALUES ('CALIBRAR', 'Calibrar elevador (bajar hasta piso 0)');

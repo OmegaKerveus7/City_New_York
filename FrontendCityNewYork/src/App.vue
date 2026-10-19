@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+
+const route = useRoute()
+const isAuthPage = computed(() => route.meta.requiresGuest === true)
 </script>
 
 <template>
-  <DashboardLayout>
-    <router-view />
-  </DashboardLayout>
+  <router-view v-if="isAuthPage" />
+  <DashboardLayout v-else />
 </template>
 
 <style>

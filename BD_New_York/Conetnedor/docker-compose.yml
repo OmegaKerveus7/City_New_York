@@ -3,7 +3,7 @@ services:
   mssql-db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: BD_New_York   # nombre del contenedor
-    restart: always
+    restart: "no"
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Arquitectura2_New_york"

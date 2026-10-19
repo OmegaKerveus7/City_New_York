@@ -47,9 +47,13 @@ namespace API_rest_City.Services
             if (!idInstruccion.HasValue)
                 throw new InvalidOperationException($"No se pudo crear la instruccion '{nombre}'");
 
-            bool esMovimientoTeleferico =
+            bool esMovimientoLargo =
                 nombre.StartsWith("TELEFERICO_AVANZAR", StringComparison.OrdinalIgnoreCase) ||
-                nombre.StartsWith("TELEFERICO_REGRESAR", StringComparison.OrdinalIgnoreCase);
+                nombre.StartsWith("TELEFERICO_REGRESAR", StringComparison.OrdinalIgnoreCase) ||
+                nombre.StartsWith("SUBIR_NIVEL", StringComparison.OrdinalIgnoreCase) ||
+                nombre.StartsWith("BAJAR_NIVEL", StringComparison.OrdinalIgnoreCase) ||
+                nombre.StartsWith("IR_A_NIVEL", StringComparison.OrdinalIgnoreCase) ||
+                nombre.StartsWith("CALIBRAR", StringComparison.OrdinalIgnoreCase);
 
             var pendienteExistente = connection.QueryFirstOrDefault<int?>(
                 @"SELECT TOP 1 id_pendiente
@@ -57,11 +61,11 @@ namespace API_rest_City.Services
                   WHERE id_instruccion = @idInstruccion
                     AND (
                         procesada = 0
-                        OR (@esMovimientoTeleferico = 1
+                        OR (@esMovimientoLargo = 1
                             AND fecha_procesamiento >= DATEADD(SECOND, -15, GETDATE()))
                     )
                   ORDER BY id_pendiente DESC",
-                new { idInstruccion, esMovimientoTeleferico },
+                new { idInstruccion, esMovimientoLargo },
                 transaction);
 
             if (pendienteExistente.HasValue)

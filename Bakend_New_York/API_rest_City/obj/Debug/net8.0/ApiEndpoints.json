@@ -42,6 +42,100 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "Bajar",
+    "RelativePath": "api/Elevador/bajar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "niveles",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "Calibrar",
+    "RelativePath": "api/Elevador/calibrar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "ObtenerEstado",
+    "RelativePath": "api/Elevador/estado",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "Ir",
+    "RelativePath": "api/Elevador/ir",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_rest_City.Controllers.NivelRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "ObtenerLog",
+    "RelativePath": "api/Elevador/log",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "limite",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "Parar",
+    "RelativePath": "api/Elevador/parar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.ElevadorController",
+    "Method": "Subir",
+    "RelativePath": "api/Elevador/subir",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "niveles",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API_rest_City.Controllers.InstruccionesController",
     "Method": "ObtenerInstrucciones",
     "RelativePath": "api/Instrucciones",

@@ -42,6 +42,20 @@ const menuItems = [
         route: '/teleferico'
       }
     ]
+  },
+  {
+    id: 'empire-state',
+    label: 'Empire State',
+    icon: 'building',
+    badge: null,
+    children: [
+      {
+        id: 'elevador',
+        label: 'Elevador',
+        icon: 'elevator',
+        route: '/empire-state/elevador'
+      }
+    ]
   }
 ]
 
@@ -100,6 +114,9 @@ const toggleMenu = (menuId: string) => {
                 <svg v-if="item.icon === 'entry'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                 </svg>
+                <svg v-if="item.icon === 'building'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h2M9 13h2M9 17h2M13 9h2M13 13h2M13 17h2" />
+                </svg>
               </span>
               <span v-if="sidebarOpen" class="nav-label">{{ item.label }}</span>
               <span v-if="sidebarOpen" class="nav-arrow" :class="{ expanded: expandedMenus.includes(item.id) }">
@@ -124,6 +141,12 @@ const toggleMenu = (menuId: string) => {
                   <svg v-if="child.icon === 'cable'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2v20M2 12h20M7 7l-5 5M17 7l5 5M7 17l-5-5M17 17l5-5" />
                     <circle cx="12" cy="12" r="2" />
+                  </svg>
+                  <svg v-if="child.icon === 'elevator'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="2" width="12" height="20" rx="1" />
+                    <line x1="12" y1="2" x2="12" y2="22" />
+                    <polyline points="9 8 12 5 15 8" />
+                    <polyline points="9 16 12 19 15 16" />
                   </svg>
                 </span>
                 <span class="nav-label">{{ child.label }}</span>
