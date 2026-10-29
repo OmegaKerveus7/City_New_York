@@ -1,269 +1,242 @@
-// ============================================
-// ESCLAVO - ELEVADOR con Stepper (I2C) + LED
-// ============================================
-// Stepper  -> Pines 8, 9, 10, 11 (via ULN2003)
-// FinCarrera Piso0 -> Pin 12 (opcional)
-// FinCarrera PisoMax -> Pin 13 (opcional)
-// LED      -> Pin 4 (parpadea cada 1 s)
-// I2C      -> Direccion 0x09
-// ============================================
 #include <Wire.h>
-#include <Stepper.h>
 
-// ====== I2C ======
-#define I2C_ADDRESS     0x09
+#define ESCLAVO1_ADDR 0x08 // Puente (Servo)
+#define ESCLAVO2_ADDR 0x09 // Elevador (Stepper)
+#define PIN_LED_MEGA  13
 
-// ====== STEPPER ======
-#define PIN_STEP_IN1    8
-#define PIN_STEP_IN2    9
-#define PIN_STEP_IN3    10
-#define PIN_STEP_IN4    11
-#define STEPS_POR_VUELTA 2048   // 28BYJ-48 típico. Ajusta si usas otro.
-#define VELOCIDAD_STEP  10      // RPM
+bool esclavo1Online = false;
+bool esclavo2Online = false;
+unsigned long ciclosMega = 0; 
 
-// ====== FINES DE CARRERA (opcional) ======
-#define PIN_FC_PISO0    12
-#define PIN_FC_PISO_MAX 13
+// ==========================================
+// PINES DE LOS SEMÁFOROS
+// ==========================================
+const int pinRojo1     = 22;
+const int pinAmarillo1 = 24;
+const int pinVerde1    = 26;
 
-// ====== LED ======
-#define PIN_LED         4
-#define INTERVALO_LED   1000    // 1 segundo (ON 1s, OFF 1s)
+const int pinRojo2     = 23;
+const int pinAmarillo2 = 27;
+const int pinVerde2    = 25; 
 
-// ====== CONFIG ELEVADOR ======
-#define PASOS_POR_NIVEL 5000    // Pasos por cada piso
-#define NIVEL_MIN       0
-#define NIVEL_MAX       5       // 6 pisos: 0..5
+unsigned long tiempoSemaforo = 0;
+int faseSemaforo = 1;
+int faseAnterior = 0;
 
-// ====== OBJETOS ======
-// Orden: IN1, IN3, IN2, IN4 (importante para ULN2003)
-Stepper miStepper(STEPS_POR_VUELTA, PIN_STEP_IN1, PIN_STEP_IN3, PIN_STEP_IN2, PIN_STEP_IN4);
-
-// ====== ESTADO ======
-int nivelActual = 0;            // Piso actual (0..NIVEL_MAX)
-long pasosRestantes = 0;        // Pasos que faltan por ejecutar
-int  direccionActual = 1;       // 1 = subir, -1 = bajar
-bool elevadorMoviendo = false;
-bool calibrado = false;
-
-// LED
-bool estadoLed = LOW;
-unsigned long ultimoCambioLed = 0;
-
-// ============================================
-// SETUP
-// ============================================
 void setup() {
-  Wire.begin(I2C_ADDRESS);
-  Wire.onRequest(requestEvent);
-  Wire.onReceive(receiveEvent);
+  Serial.begin(115200);       // Monitor USB de la PC (Ponlo en 115200 en el IDE)
+  Serial1.begin(9600);        // Hacia el ESP32 (Pines 18 y 19) - 9600 es seguro
+  Wire.begin();               // I2C Maestro (Pines 20 y 21)
+  
+  pinMode(PIN_LED_MEGA, OUTPUT);
+  digitalWrite(PIN_LED_MEGA, LOW);
 
-  miStepper.setSpeed(VELOCIDAD_STEP);
+  pinMode(pinRojo1, OUTPUT); pinMode(pinAmarillo1, OUTPUT); pinMode(pinVerde1, OUTPUT);
+  pinMode(pinRojo2, OUTPUT); pinMode(pinAmarillo2, OUTPUT); pinMode(pinVerde2, OUTPUT);
 
-  pinMode(PIN_FC_PISO0, INPUT_PULLUP);
-  pinMode(PIN_FC_PISO_MAX, INPUT_PULLUP);
+  apagarSemaforos();
 
-  // LED
-  pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, LOW);
-
-  Serial.begin(9600);
-  Serial.println("=== ESCLAVO ELEVADOR LISTO ===");
-  Serial.print("I2C: 0x"); Serial.println(I2C_ADDRESS, HEX);
-  Serial.print("Pasos por nivel: "); Serial.println(PASOS_POR_NIVEL);
-  Serial.print("LED en pin: "); Serial.println(PIN_LED);
-  Serial.println("Comandos:");
-  Serial.println("  SUBIR_NIVEL n     -> sube n pisos");
-  Serial.println("  BAJAR_NIVEL n     -> baja n pisos");
-  Serial.println("  IR_A_NIVEL n      -> va al piso n");
-  Serial.println("  ELEVADOR_PARAR    -> detener");
-  Serial.println("  ELEVADOR_STATUS   -> reportar estado");
-  Serial.println("  CALIBRAR          -> bajar hasta piso 0");
-  Serial.println("  PING              -> PONG");
+  delay(1000);
+  Serial.println("=== MEGA CONTROL MAESTRO y SEMAFOROS ===");
+  Serial.println("Iniciando busqueda de esclavos I2C...");
+  
+  chequearEsclavos();
+  tiempoSemaforo = millis();
 }
 
-// ============================================
-// LOOP
-// ============================================
 void loop() {
-  // --- Movimiento paso a paso (no bloqueante) ---
-  if (elevadorMoviendo && pasosRestantes > 0) {
-    miStepper.step(direccionActual);
-    pasosRestantes--;
-
-    // Chequeo de fin de carrera piso 0
-    if (digitalRead(PIN_FC_PISO0) == LOW && direccionActual < 0) {
-      pasosRestantes = 0;
-      elevadorMoviendo = false;
-      nivelActual = 0;
-      calibrado = true;
-      Serial.println(">> FIN CARRERA PISO 0 detectado");
-    }
-    // Chequeo de fin de carrera piso MAX
-    if (digitalRead(PIN_FC_PISO_MAX) == LOW && direccionActual > 0) {
-      pasosRestantes = 0;
-      elevadorMoviendo = false;
-      nivelActual = NIVEL_MAX;
-      Serial.println(">> FIN CARRERA PISO MAX detectado");
-    }
-
-    if (pasosRestantes == 0) {
-      elevadorMoviendo = false;
-      Serial.print(">> Elevador detenido en nivel ");
-      Serial.println(nivelActual);
-    }
-  }
-
-  // --- LED parpadeando cada 1 segundo (no bloqueante) ---
-  if (millis() - ultimoCambioLed >= INTERVALO_LED) {
-    ultimoCambioLed = millis();
-    estadoLed = !estadoLed;
-    digitalWrite(PIN_LED, estadoLed);
-  }
-
-  // --- Comandos manuales por Serial (para pruebas) ---
-  if (Serial.available()) {
-    String cmd = Serial.readStringUntil('\n');
-    cmd.trim();
-    cmd.toUpperCase();
+  // 1. Escuchar al ESP32
+  if (Serial1.available()) {
+    String cmd = Serial1.readStringUntil('\n');
+    cmd.trim();          
+    cmd.toUpperCase();   
+    
     if (cmd.length() > 0) {
-      Serial.print(">> Manual: "); Serial.println(cmd);
-      procesarComando(cmd);
+      Serial.print("[ESP32] ");
+      Serial.println(cmd);
+      procesarComandoESP32(cmd);
     }
   }
 
-  delay(1);
+  // 2. Chequear esclavos cada 5 segundos
+  static unsigned long ultimoChequeo = 0;
+  if (millis() - ultimoChequeo > 5000) {
+    ultimoChequeo = millis();
+    chequearEsclavos();
+  }
+
+  // 3. Control de Semáforos
+  actualizarSemaforos();
 }
 
 // ============================================
-// I2C - Responder al Mega
+// PROCESAR COMANDOS DEL ESP32
 // ============================================
-void requestEvent() {
-  char buffer[32];
-  // Formato: NIVEL:03|PAS:xxxxx\n
-  snprintf(buffer, sizeof(buffer), "NIVEL:%02d|PAS:%05ld\n",
-           nivelActual, pasosRestantes);
-  Wire.write((uint8_t*)buffer, strlen(buffer));
-}
-
-// ============================================
-// I2C - Recibir comando del Mega
-// ============================================
-void receiveEvent(int howMany) {
-  String cmd = "";
-  while (Wire.available()) cmd += (char)Wire.read();
-  cmd.trim();
-  cmd.toUpperCase();
-
-  if (cmd.length() == 0) return;
-
-  Serial.print("[I2C] Recibido: "); Serial.println(cmd);
-  procesarComando(cmd);
-}
-
-// ============================================
-// Procesar comandos
-// ============================================
-void procesarComando(String cmd) {
-
-  // ===== PING =====
+void procesarComandoESP32(String cmd) {
+  
   if (cmd == "PING") {
-    Serial.println("PONG");
+    ciclosMega++; 
+    Serial1.print("CICLO_MEGA:");
+    Serial1.println(ciclosMega);
     return;
   }
 
-  // ===== SUBIR_NIVEL n =====
-  if (cmd.startsWith("SUBIR_NIVEL")) {
-    int n = 1;
-    int idx = cmd.indexOf(' ');
-    if (idx > 0) n = cmd.substring(idx + 1).toInt();
-    if (n <= 0) { Serial.println("Niveles invalidos"); return; }
-    moverNiveles(+n);
+  if (cmd == "SEMAFORO_STATUS") {
+    enviarEstadoSemaforosESP32(faseSemaforo);
     return;
   }
 
-  // ===== BAJAR_NIVEL n =====
-  if (cmd.startsWith("BAJAR_NIVEL")) {
-    int n = 1;
-    int idx = cmd.indexOf(' ');
-    if (idx > 0) n = cmd.substring(idx + 1).toInt();
-    if (n <= 0) { Serial.println("Niveles invalidos"); return; }
-    moverNiveles(-n);
-    return;
-  }
-
-  // ===== IR_A_NIVEL n =====
-  if (cmd.startsWith("IR_A_NIVEL")) {
-    int idx = cmd.indexOf(' ');
-    if (idx < 0) { Serial.println("Falta nivel"); return; }
-    int destino = cmd.substring(idx + 1).toInt();
-    if (destino < NIVEL_MIN || destino > NIVEL_MAX) {
-      Serial.println("Nivel fuera de rango");
+  // --- PUENTE ---
+  if (cmd == "SERVO_SUBIR" || cmd == "SERVO_BAJAR" || cmd == "SERVO_STATUS" || cmd.startsWith("SERVO ")) {
+    if (!esclavo1Online) {
+      Serial1.println("RESP ERROR:ESCLAVO1_OFFLINE");
       return;
     }
-    int delta = destino - nivelActual;
-    if (delta == 0) { Serial.println("Ya esta en ese nivel"); return; }
-    moverNiveles(delta);
+    enviarI2C(ESCLAVO1_ADDR, cmd);
     return;
   }
 
-  // ===== ELEVADOR_PARAR =====
-  if (cmd == "ELEVADOR_PARAR") {
-    elevadorMoviendo = false;
-    pasosRestantes = 0;
-    Serial.println(">> Elevador PARADO");
+  // --- ELEVADOR ---
+  if (cmd.startsWith("SUBIR_NIVEL") || cmd.startsWith("BAJAR_NIVEL") || cmd.startsWith("IR_A_NIVEL") || 
+      cmd == "ELEVADOR_PARAR" || cmd == "ELEVADOR_STATUS" || cmd == "CALIBRAR") {
+    if (!esclavo2Online) {
+      Serial1.println("RESP ERROR:ESCLAVO2_OFFLINE");
+      return;
+    }
+    enviarI2C(ESCLAVO2_ADDR, cmd);
     return;
   }
 
-  // ===== ELEVADOR_STATUS =====
-  if (cmd == "ELEVADOR_STATUS") {
-    Serial.print("Nivel: "); Serial.print(nivelActual);
-    Serial.print(" | Pasos restantes: "); Serial.println(pasosRestantes);
+  // --- TELEFERICO ---
+  if (cmd.startsWith("TELEFERICO_AVANZAR") || cmd.startsWith("TELEFERICO_REGRESAR") || 
+      cmd == "TELEFERICO_PARAR" || cmd == "TELEFERICO_STATUS") {
+    if (!esclavo1Online) {
+      Serial1.println("RESP ERROR:ESCLAVO1_OFFLINE");
+      return;
+    }
+    enviarI2C(ESCLAVO1_ADDR, cmd);
     return;
   }
 
-  // ===== CALIBRAR =====
-  if (cmd == "CALIBRAR") {
-    Serial.println(">> Calibrando: bajando hasta piso 0...");
-    nivelActual = 0;
-    direccionActual = -1;
-    pasosRestantes = 99999; // se detiene con fin de carrera
-    elevadorMoviendo = true;
-    return;
-  }
-
-  Serial.print("Desconocido: "); Serial.println(cmd);
+  Serial.print(">> Comando desconocido: [");
+  Serial.print(cmd);
+  Serial.println("]");
+  Serial1.println("RESP ERROR:CMD_DESCONOCIDO");
 }
 
 // ============================================
-// Mover N niveles (positivo=subir, negativo=bajar)
+// ENVIAR Y LEER POR I2C (SIN BLOQUEOS)
 // ============================================
-void moverNiveles(int n) {
-  int destino = nivelActual + n;
-  if (destino < NIVEL_MIN) {
-    Serial.println(">> Limitado a piso minimo");
-    destino = NIVEL_MIN;
-  }
-  if (destino > NIVEL_MAX) {
-    Serial.println(">> Limitado a piso maximo");
-    destino = NIVEL_MAX;
-  }
-  if (destino == nivelActual) {
-    Serial.println(">> Ya esta en ese nivel");
+void enviarI2C(uint8_t direccion, String cmd) {
+  Wire.beginTransmission(direccion);
+  Wire.write(cmd.c_str());
+  byte err = Wire.endTransmission();
+
+  if (err != 0) {
+    Serial1.println("RESP ERROR:I2C_WRITE");
     return;
   }
 
-  int niveles = destino - nivelActual;
-  pasosRestantes = (long)abs(niveles) * PASOS_POR_NIVEL;
-  direccionActual = (niveles > 0) ? 1 : -1;
-  elevadorMoviendo = true;
+  unsigned long inicio = millis();
+  while (millis() - inicio < 50) {
+    if (Serial1.available()) {
+      String extra = Serial1.readStringUntil('\n');
+      extra.trim();
+    }
+    yield();
+  }
 
-  Serial.print(">> Moviendo ");
-  Serial.print(abs(niveles));
-  Serial.print(" nivel(es) ");
-  Serial.print(direccionActual > 0 ? "ARRIBA" : "ABAJO");
-  Serial.print(" | Pasos: ");
-  Serial.println(pasosRestantes);
+  Wire.requestFrom(direccion, 32);
+  String resp = "";
+  while (Wire.available()) {
+    char c = Wire.read();
+    if (c == '\n') break; 
+    resp += c;
+  }
+  resp.trim();
 
-  // Actualizamos nivelActual al vuelo
-  nivelActual = destino;
+  if (resp.length() > 0) {
+    Serial1.print("RESP ");
+    Serial1.println(resp);
+  } else {
+    Serial1.println("RESP ERROR:SIN_RESPUESTA");
+  }
+}
+
+bool pingI2C(uint8_t addr) {
+  Wire.beginTransmission(addr);
+  return (Wire.endTransmission() == 0);
+}
+
+// ============================================
+// CHEQUEAR ESCLAVOS (MODIFICADO PARA VER EN PANTALLA)
+// ============================================
+void chequearEsclavos() {
+  bool e1 = pingI2C(ESCLAVO1_ADDR);
+  bool e2 = pingI2C(ESCLAVO2_ADDR);
+
+  // Solo enviamos el aviso al ESP32 si hay un cambio real de estado
+  if (e1 != esclavo1Online) {
+    esclavo1Online = e1;
+    Serial1.print("ESCLAVO1=");
+    Serial1.println(esclavo1Online ? "OK" : "ERROR");
+  }
+
+  if (e2 != esclavo2Online) {
+    esclavo2Online = e2;
+    Serial1.print("ESCLAVO2=");
+    Serial1.println(esclavo2Online ? "OK" : "ERROR");
+  }
+
+  // SIEMPRE imprimimos en el Monitor Serie del Mega para saber qué pasa
+  Serial.print("[I2C] Esclavo 1 (0x08): ");
+  Serial.print(e1 ? "OK" : "FALLO");
+  Serial.print(" | Esclavo 2 (0x09): ");
+  Serial.println(e2 ? "OK" : "FALLO");
+}
+
+// --- FUNCIONES DE SEMÁFOROS ---
+void actualizarSemaforos() {
+  unsigned long tiempoActual = millis();
+  unsigned long tiempoTranscurrido = tiempoActual - tiempoSemaforo;
+
+  switch (faseSemaforo) {
+    case 1: if (tiempoTranscurrido >= 150000) { faseSemaforo = 2; tiempoSemaforo = tiempoActual; } break;
+    case 2: if (tiempoTranscurrido >= 30000) { faseSemaforo = 3; tiempoSemaforo = tiempoActual; } break;
+    case 3: if (tiempoTranscurrido >= 150000) { faseSemaforo = 4; tiempoSemaforo = tiempoActual; } break;
+    case 4: if (tiempoTranscurrido >= 30000) { faseSemaforo = 1; tiempoSemaforo = tiempoActual; } break;
+  }
+
+  if (faseSemaforo != faseAnterior) {
+    faseAnterior = faseSemaforo;
+    aplicarEstadoSemaforos(faseSemaforo);
+    enviarEstadoSemaforosESP32(faseSemaforo);
+  }
+}
+
+void aplicarEstadoSemaforos(int fase) {
+  if (fase == 1) {
+    digitalWrite(pinRojo1, LOW); digitalWrite(pinAmarillo1, LOW); digitalWrite(pinVerde1, HIGH);
+    digitalWrite(pinRojo2, HIGH); digitalWrite(pinAmarillo2, LOW); digitalWrite(pinVerde2, LOW);
+  } else if (fase == 2) {
+    digitalWrite(pinRojo1, LOW); digitalWrite(pinAmarillo1, HIGH); digitalWrite(pinVerde1, LOW);
+    digitalWrite(pinRojo2, HIGH); digitalWrite(pinAmarillo2, LOW); digitalWrite(pinVerde2, LOW);
+  } else if (fase == 3) {
+    digitalWrite(pinRojo1, HIGH); digitalWrite(pinAmarillo1, LOW); digitalWrite(pinVerde1, LOW);
+    digitalWrite(pinRojo2, LOW); digitalWrite(pinAmarillo2, LOW); digitalWrite(pinVerde2, HIGH);
+  } else if (fase == 4) {
+    digitalWrite(pinRojo1, HIGH); digitalWrite(pinAmarillo1, LOW); digitalWrite(pinVerde1, LOW);
+    digitalWrite(pinRojo2, LOW); digitalWrite(pinAmarillo2, HIGH); digitalWrite(pinVerde2, LOW);
+  }
+}
+
+void apagarSemaforos() {
+  digitalWrite(pinRojo1, LOW); digitalWrite(pinAmarillo1, LOW); digitalWrite(pinVerde1, LOW);
+  digitalWrite(pinRojo2, LOW); digitalWrite(pinAmarillo2, LOW); digitalWrite(pinVerde2, LOW);
+}
+
+void enviarEstadoSemaforosESP32(int fase) {
+  String msg = "SEMAFORO:FASE_";
+  msg += String(fase);
+  Serial1.println(msg);
 }

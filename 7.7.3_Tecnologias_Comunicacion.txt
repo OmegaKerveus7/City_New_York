@@ -1,0 +1,248 @@
+================================================================================
+ 7.7.3  TECNOLOGIAS USADAS PARA LA COMUNICACION
+ Proyecto: City_New_York - Maqueta funcional de la ciudad de Nueva York
+================================================================================
+
+Fuente: codigo real del repositorio (no especificacion).
+Archivos verificados:
+  - FrontendCityNewYork/package.json
+  - Bakend_New_York/API_rest_City/API_rest_City.csproj, Program.cs,
+    appsettings.json, Services/JwtService.cs, BD/DBContext.cs,
+    Properties/launchSettings.json
+  - BD_New_York/Conetnedor/docker-compose.yml
+  - Componentes_fisicos/Esp32_NY/Esp32_NY.ino
+  - Componentes_fisicos/esclavo_frontera/esclavo_frontera.ino
+  - Componentes_fisicos/esclavo_Empire_State/esclavo_Empire_State.ino
+
+
+--------------------------------------------------------------------------------
+ 1. MATRIZ GENERAL POR CAPA
+--------------------------------------------------------------------------------
+
+ CAPA              TECNOLOGIA                 ESTANDAR/PROTOCOLO       VERSION                          FUNCION
+ ----------------  -------------------------  -----------------------  -------------------------------  ---------------------------------
+ Presentacion      Vue 3 + Vite               -                        Vue 3.5.42 / Vite 8.3.2          Cliente SPA que consume la API
+ Cliente HTTP      Axios                      HTTP/1.1                 1.20.0                           Peticiones REST + interceptores
+ Sesion            JWT                        RFC 7519 / HS256         JwtBearer 8.0.11                 Autenticacion stateless
+ Transporte        HTTP/1.1 + TLS             RFC 7230 / RFC 8446      Kestrel (.NET 8) + ngrok         Entrega de la API
+ Serializacion     JSON                       RFC 8259                 System.Text.Json (MaxDepth 64)   Formato de todos los payloads
+ API               ASP.NET Core Web API       REST / OpenAPI 3         net8.0 / Swashbuckle 6.6.2       Endpoints y documentacion
+ Acceso a datos    Dapper + SqlClient         TDS 7.4 sobre TCP        2.1.89 / 7.1.0                   Consultas y SPs
+ Motor de BD       SQL Server                 T-SQL                    2022 Developer (Docker)          Persistencia y cola
+ Red de campo      Wi-Fi + TCP/IP             IEEE 802.11 b/g/n        ESP32 Arduino core               Enlace inalambrico
+ Gateway <-> Mega  UART asincrono             9600 8N1 TTL             HardwareSerial (Serial2)         Transporte de comandos
+ Nivel fisico      TXS0108E                   Level shifter            -                                Adaptacion 3.3 V <-> 5 V
+ Mega <-> esclavos I2C / TWI                  100 kHz, 7 bits          Wire.h                           Bus de control local
+ Actuadores        PWM + GPIO                 50 Hz servo / digital    Servo.h, Stepper.h               Movimiento y sensado
+
+
+--------------------------------------------------------------------------------
+ 2. DETALLE POR TRAMO DE COMUNICACION
+--------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+ 2.1  FRONTEND -> BACKEND  (Vue <-> ASP.NET)
+-------------------------------------------------------------------------------
+ TECNOLOGIA        EVIDENCIA                   PARAMETRO
+ ----------------  --------------------------  -------------------------------------
+ REST / HTTP 1.1   src/api/http.ts             baseURL http://localhost:5238/api
+                                               timeout 10 000 ms
+ Axios             http.ts                     Interceptor inyecta Authorization:
+                                               Bearer <token>
+ JSON              Controllers                 Content-Type: application/json
+ JWT HS256         Services/JwtService.cs      Expiracion 120 min; claims sub,
+                                               email, name, role; issuer
+                                               CiudadNewYorkAPI; audience
+                                               CiudadNewYorkClient
+ CORS              Program.cs                  Politica "PermitirFrontend"
+                                               (AllowAnyOrigin/Method/Header)
+ HTTPS             Perfil https / ngrok        https://localhost:7137 y tunel TLS
+                                               de ngrok
+ OpenAPI/Swagger   Program.cs                  UI en la raiz (RoutePrefix = "")
+ Pinia + Router    stores/auth.ts, router       Token en localStorage + guards
+                                               de sesion
+
+-------------------------------------------------------------------------------
+ 2.2  BACKEND -> BASE DE DATOS  (ASP.NET <-> SQL Server)
+-------------------------------------------------------------------------------
+ TECNOLOGIA        EVIDENCIA                   PARAMETRO
+ ----------------  --------------------------  -------------------------------------
+ TDS sobre TCP     BD/DBContext.cs             Server=localhost,1444
+ SqlClient         API_rest_City.csproj        7.1.0, TrustServerCertificate=True
+ Dapper            InstruccionService y        2.1.89 (micro-ORM, SQL embebido)
+                   controllers
+ SQL Server        docker-compose.yml          Imagen mssql/server:2022-latest,
+                                               edicion Developer
+ Docker port map   docker-compose.yml          1444:1433 (host:contenedor)
+ Stored Procedures StoredProcedures_Auth.sql,  RPC para login/registro
+                   StoredProcedures_Instruc.
+ Transacciones     InstruccionService          ReadCommitted, UPDLOCK, HOLDLOCK,
+                                               TOP 1
+
+ NOTA: la "cola de mensajes" no usa broker externo. Es la tabla
+ Instruccion_Pendiente con bloqueo pesimista.
+
+-------------------------------------------------------------------------------
+ 2.3  BACKEND <-> ESP32  (gateway)
+-------------------------------------------------------------------------------
+ TECNOLOGIA        EVIDENCIA (Esp32_NY.ino)    PARAMETRO
+ ----------------  --------------------------  -------------------------------------
+ HTTPS saliente    #define BACKEND_URL         https://warless-predestinately-
+                                               bethann.ngrok-free.dev
+ ngrok             URL publica                 Terminacion TLS + tunel al 5238
+ HTTPClient        #include <HTTPClient.h>      http.begin(url), timeout 5000 ms
+ Wi-Fi STA         #include <WiFi.h>           SSID "Omega", 2.4 GHz
+ Polling REST      consultarInstrucciones()    INTERVALO_POLL = 5000 ms
+ JSON              procesarPayloadInstr.()     Parseo manual por indices de string
+ Servidor HTTP     #include <WebServer.h>       Puerto 80 (solo diagnostico LAN)
+ Keepalive         PING                        INTERVALO_PING = 3000 ms
+ Deteccion caida   TIMEOUT_MEGA                10 000 ms
+
+-------------------------------------------------------------------------------
+ 2.4  ESP32 <-> ARDUINO MEGA
+-------------------------------------------------------------------------------
+ TECNOLOGIA        EVIDENCIA                   PARAMETRO
+ ----------------  --------------------------  -------------------------------------
+ UART asincrono    Serial2.begin()             9600 baud, 8N1 (SERIAL_8N1)
+ Pines             RXD2 16 / TXD2 17           GPIO16 RX / GPIO17 TX
+ Nivel logico      TXS0108E                    3.3 V (ESP32) <-> 5 V (Mega)
+ Protocolo         readStringUntil('\n')       Texto ASCII, terminado en '\n'
+ Handshake         PING / PONG_MEGA            cada 3000 ms
+ Respuestas        prefijo "RESP "             RESP POS:115
+                                               RESP NIVEL:03|PAS:01234
+ Estado esclavos   ESCLAVO1=OK                 Reporte de disponibilidad
+
+ NOTA: no hay CRC, ni ACK por trama, ni numero de secuencia. La confiabilidad
+ se apoya en el idPendiente que asigna el backend.
+
+-------------------------------------------------------------------------------
+ 2.5  MEGA -> ESCLAVOS  (bus de campo)
+-------------------------------------------------------------------------------
+ TECNOLOGIA        EVIDENCIA                   PARAMETRO
+ ----------------  --------------------------  -------------------------------------
+ I2C / TWI         #include <Wire.h>           SDA A4, SCL A5, 100 kHz (default)
+ Direccionamiento  #define I2C_ADDRESS         0x08 frontera / 0x09 Empire State
+ Modelo de acceso  Wire.onReceive/onRequest   Esclavos pasivos, nunca inician
+                                               trafico
+ Pull-ups          Requeridas en hardware      4.7 kOhm a 5 V
+ Comandos          SERVO_SUBIR, SERVO <ang>,   ASCII terminado en '\n'
+                   TELEFERICO_AVANZAR 3000
+ Respuestas        POS:%03d                     Estado del servo
+                   NIVEL:%02d|PAS:%05ld         Estado del elevador
+ Actuacion         Servo.h / Stepper.h         Servo pin 6; steppers pines 8-11
+ Sensado           digitalRead INPUT_PULLUP     Fines de carrera pines 12 y 13
+
+
+--------------------------------------------------------------------------------
+ 3. PUERTOS, DIRECCIONES Y PINES
+--------------------------------------------------------------------------------
+
+ RECURSO                        VALOR
+ -----------------------------  -----------------------------------------------
+ Frontend Vite                  3000
+ API HTTP                       5238
+ API HTTPS                      7137 (perfil https / ngrok)
+ SQL Server host                1444  -> contenedor 1433
+ ESP32 HTTP local               80
+ ngrok                          443 (HTTPS publico)
+ I2C esclavo frontera           0x08
+ I2C esclavo Empire State       0x09
+ UART ESP32                     RX GPIO16 / TX GPIO17
+ Botones locales ESP32          GPIO32 (abrir) / GPIO33 (cerrar)
+ Fines de carrera elevador      GPIO12 (piso 0) / GPIO13 (piso maximo)
+ Bus I2C Mega                   A4 = SDA / A5 = SCL
+
+
+--------------------------------------------------------------------------------
+ 4. TECNOLOGIAS QUE NO SE USAN (deuda tecnica declarada)
+--------------------------------------------------------------------------------
+
+ AUSENTE                        CONSECUENCIA / JUSTIFICACION
+ -----------------------------  -----------------------------------------------
+ WebSocket / SignalR / SSE      No hay push: la UI se actualiza con polling
+                                REST. Latencia minima aproximada de 5 s.
+ MQTT / AMQP / Kafka / Rabbit   La cola es una tabla SQL. Sirve para 1
+                                dispositivo, no escala a muchos.
+ gRPC / Protobuf                Todo es JSON en texto; mas consumo pero legible
+                                en el monitor serie.
+ Modbus / CAN / RS-485          Se eligio I2C por simplicidad de cableado en
+                                maqueta.
+ BLE / LoRa / Zigbee            Wi-Fi directo a la red local.
+ OAuth 2.0 / IdentityServer     JWT propio con clave simetrica; no hay refresh
+                                token.
+ TLS validado en el ESP32       No se fija CA ni se usa setInsecure() explicito;
+                                la validacion depende del core. Riesgo al
+                                actualizar el framework.
+ HTTPS forzado en el frontend   http.ts apunta a http://localhost:5238; el TLS
+                                solo existe en el tramo ngrok.
+
+
+--------------------------------------------------------------------------------
+ 5. LECTURA CRITICA (para la defensa)
+--------------------------------------------------------------------------------
+
+ - Latencia real del lazo: peor caso = 5 s de polling + 3.5 s de espera de
+   respuesta, aproximadamente 8.5 s antes de saber si el comando se ejecuto.
+   Promedio aproximado de 2.5 s. A eso se suma el tiempo mecanico (el
+   teleferico a 5 RPM tarda mucho mas que la comunicacion).
+
+ - El ESP32 es el unico punto de fallo de red. Si se cae, el sistema queda
+   aislado aunque Mega y esclavos sigan vivos. El servidor HTTP local del
+   ESP32 solo sirve para diagnostico, no es una ruta alternativa.
+
+ - Seguridad: CORS abierto, contrasena SA en texto plano y
+   TrustServerCertificate=True son aceptables en desarrollo, pero deben
+   declararse como deuda tecnica y no como diseno final.
+
+ - Coherencia del protocolo: el mismo esquema de texto ASCII atraviesa UART
+   e I2C (SERVO_SUBIR viaja sin traduccion). Simplifica la depuracion, pero
+   acopla el esclavo a la API: renombrar una instruccion en la BD obliga a
+   reflashear los Arduinos.
+
+
+--------------------------------------------------------------------------------
+ 6. DIAGRAMA INTEGRADO DE COMUNICACION
+--------------------------------------------------------------------------------
+
+  +--------------+  HTTPS/JWT   +------------------+   TDS    +---------------------+
+  | Vue 3 + Vite | -----------> | ASP.NET Core 8   | -------> | SQL Server 2022     |
+  | Pinia/Router | <----------- | Controllers      | <------- | Instruccion         |
+  +--------------+  JSON estado | InstruccionSvc   |          | Instruccion_Pendiente|
+                               +--------+---------+          | Log_Instruccion     |
+                                        | polling 5 s         +---------------------+
+                                        | HTTPS (ngrok)
+                               +--------+---------+
+                               | ESP32 gateway    |  GPIO32/33 botones locales
+                               | WiFi + HTTP      |  PING keepalive 3 s
+                               +--------+---------+
+                                        | UART 9600 8N1 + GND comun
+                                        | TXS0108E (3.3 V <-> 5 V)
+                               +--------+---------+
+                               | Arduino Mega     |  MAESTRO I2C
+                               | UART <-> I2C     |  (sketch maestro: FALTANTE)
+                               +---+----------+---+
+                          A4/A5    |          |    A4/A5
+                     +-------------+--+    +--+--------------+
+                     | Esclavo 0x08   |    | Esclavo 0x09    |
+                     | servo + step   |    | elevador + LED  |
+                     | teleferico     |    | FC pin 12 y 13  |
+                     +----------------+    +-----------------+
+
+
+--------------------------------------------------------------------------------
+ 7. GLOSARIO BREVE
+--------------------------------------------------------------------------------
+
+ TDS      Tabular Data Stream: protocolo propietario de SQL Server.
+ JWT      JSON Web Token: credencial firmada que viaja en el header.
+ HS256    HMAC con SHA-256: algoritmo de firma simetrica del token.
+ I2C/TWI  Bus de 2 hilos (SDA/SCL) con maestro y esclavos direccionables.
+ UART     Puerto serie asincrono punto a punto (TX/RX + GND).
+ 8N1      8 bits de datos, sin paridad, 1 bit de parada.
+ Polling  Consulta periodica del cliente al servidor (no hay push).
+ TTL      Nivel logico transistor-transistor; 5 V en Arduino, 3.3 V en ESP32.
+
+
+================================================================================
+ Fin del documento
+================================================================================
