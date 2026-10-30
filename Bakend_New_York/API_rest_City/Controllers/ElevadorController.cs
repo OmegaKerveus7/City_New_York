@@ -161,7 +161,7 @@ namespace API_rest_City.Controllers
 
                 var ultimo = connection.QueryFirstOrDefault<dynamic>(
                     @"SELECT TOP 1 nombre_instruccion AS instruccion,
-                             angulo_resultado AS nivel
+                             COALESCE(nivel_resultado, angulo_resultado) AS nivel
                       FROM Log_Instruccion
                       WHERE nombre_instruccion LIKE 'SUBIR_NIVEL%'
                          OR nombre_instruccion LIKE 'BAJAR_NIVEL%'
@@ -215,7 +215,7 @@ namespace API_rest_City.Controllers
                           id_log AS Id,
                           nombre_instruccion AS Instruccion,
                           resultado AS Resultado,
-                          angulo_resultado AS Nivel,
+                          COALESCE(nivel_resultado, angulo_resultado) AS Nivel,
                           tipo_ejecucion AS Tipo,
                           fecha_ejecucion AS Fecha
                       FROM Log_Instruccion

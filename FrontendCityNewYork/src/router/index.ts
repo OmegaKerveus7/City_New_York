@@ -47,6 +47,12 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Empire State - Elevador' }
     },
     {
+      path: '/semaforo',
+      name: 'semaforo',
+      component: () => import('@/pages/SemaforoPage.vue'),
+      meta: { requiresAuth: true, title: 'Semaforos' }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }

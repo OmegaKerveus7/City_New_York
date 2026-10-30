@@ -138,13 +138,14 @@ namespace API_rest_City.Controllers
 
                 // Registrar en log
                 var logSql = @"
-                    INSERT INTO Log_Instruccion (nombre_instruccion, resultado, angulo_resultado, ip_dispositivo, tipo_ejecucion)
-                    VALUES (@nombre, @resultado, @angulo, @ip, 'REMOTA')";
+                    INSERT INTO Log_Instruccion (nombre_instruccion, resultado, angulo_resultado, nivel_resultado, ip_dispositivo, tipo_ejecucion)
+                    VALUES (@nombre, @resultado, @angulo, @nivel, @ip, 'REMOTA')";
 
                 connection.Execute(logSql, new {
                     nombre = nombre ?? "DESCONOCIDO",
                     resultado = request.Resultado,
                     angulo = request.Angulo,
+                    nivel = request.Nivel,
                     ip = request.IpDispositivo
                 });
 
@@ -213,6 +214,8 @@ namespace API_rest_City.Controllers
         public int IdPendiente { get; set; }
         public string Resultado { get; set; } = string.Empty;
         public int? Angulo { get; set; }
+        public int? Nivel { get; set; }
+        public int? TiempoRespuestaMs { get; set; }
         public string? IpDispositivo { get; set; }
     }
 

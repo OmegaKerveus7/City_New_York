@@ -238,6 +238,71 @@
         }
       }
     },
+    "/api/estado": {
+      "post": {
+        "tags": [
+          "Estado"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstadoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/estado/todos": {
+      "get": {
+        "tags": [
+          "Estado"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/estado/{clave}": {
+      "get": {
+        "tags": [
+          "Estado"
+        ],
+        "parameters": [
+          {
+            "name": "clave",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Instrucciones": {
       "get": {
         "tags": [
@@ -376,6 +441,135 @@
         }
       }
     },
+    "/api/jardin/fuente/encender": {
+      "post": {
+        "tags": [
+          "Jardin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/fuente/apagar": {
+      "post": {
+        "tags": [
+          "Jardin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/fuente/pulso": {
+      "post": {
+        "tags": [
+          "Jardin"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/fuente/status": {
+      "post": {
+        "tags": [
+          "Jardin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/luces/encender": {
+      "post": {
+        "tags": [
+          "Jardin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/luces/apagar": {
+      "post": {
+        "tags": [
+          "Jardin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/estado": {
+      "get": {
+        "tags": [
+          "Jardin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jardin/log": {
+      "get": {
+        "tags": [
+          "Jardin"
+        ],
+        "parameters": [
+          {
+            "name": "limite",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Puente/estado": {
       "get": {
         "tags": [
@@ -416,6 +610,108 @@
       "get": {
         "tags": [
           "Puente"
+        ],
+        "parameters": [
+          {
+            "name": "limite",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/semaforo/cambiar": {
+      "post": {
+        "tags": [
+          "Semaforo"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemaforoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemaforoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemaforoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/semaforo/auto": {
+      "post": {
+        "tags": [
+          "Semaforo"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/semaforo/parar": {
+      "post": {
+        "tags": [
+          "Semaforo"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/semaforo/status": {
+      "post": {
+        "tags": [
+          "Semaforo"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/semaforo/estado": {
+      "get": {
+        "tags": [
+          "Semaforo"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/semaforo/log": {
+      "get": {
+        "tags": [
+          "Semaforo"
         ],
         "parameters": [
           {
@@ -620,6 +916,23 @@
         },
         "additionalProperties": false
       },
+      "EstadoRequest": {
+        "type": "object",
+        "properties": {
+          "ipDispositivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "LocalRequest": {
         "type": "object",
         "properties": {
@@ -683,7 +996,31 @@
             "format": "int32",
             "nullable": true
           },
+          "nivel": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "tiempoRespuestaMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "ipDispositivo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SemaforoRequest": {
+        "type": "object",
+        "properties": {
+          "carril": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
             "type": "string",
             "nullable": true
           }

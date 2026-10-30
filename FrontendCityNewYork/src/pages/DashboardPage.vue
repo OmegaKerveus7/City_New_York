@@ -1,7 +1,46 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores'
+import { estadoService } from '@/api/estadoService'
+import type { EstadoComponente } from '@/api/estadoService'
 
 const authStore = useAuthStore()
+
+const componentes = ref<EstadoComponente[]>([])
+const ultimaActualizacion = ref<string | null>(null)
+const error = ref<string | null>(null)
+
+let temporizador: number | undefined
+
+const cargarEstado = async () => {
+  try {
+    const respuesta = await estadoService.obtenerTodos()
+    componentes.value = respuesta.componentes || []
+    ultimaActualizacion.value = respuesta.ultimaActualizacion
+    error.value = null
+  } catch (e) {
+    error.value = 'Sin conexión con el backend para leer el estado en vivo'
+  }
+}
+
+const valorDe = (clave: string): string | null => {
+  const encontrado = componentes.value.find(c => c.Clave === clave)
+  return encontrado?.Valor ?? null
+}
+
+const numeroDe = (clave: string): number | null => {
+  const encontrado = componentes.value.find(c => c.Clave === clave)
+  return encontrado?.ValorNumero ?? null
+}
+
+onMounted(() => {
+  cargarEstado()
+  temporizador = window.setInterval(cargarEstado, 5000)
+})
+
+onUnmounted(() => {
+  if (temporizador) window.clearInterval(temporizador)
+})
 </script>
 
 <template>
@@ -71,6 +110,66 @@ const authStore = useAuthStore()
             <span class="stat-label">Eficiencia</span>
           </div>
         </div>
+      </div>
+
+      <div class="content-card live-card animate-fade-in-up delay-2">
+        <div class="card-header">
+          <h3>Estado en Vivo de la Ciudad</h3>
+          <span class="live-indicator">
+            <span class="live-indicator__dot"></span>
+            EN VIVO
+          </span>
+        </div>
+
+        <p class="live-note">
+          Datos enviados por el ESP32 cada 5 segundos a través del backend.
+          <span v-if="ultimaActualizacion">
+            Última lectura: {{ new Date(ultimaActualizacion).toLocaleTimeString('es-ES') }}
+          </span>
+        </p>
+
+        <div class="live-grid">
+          <div class="live-item">
+            <div class="live-item__title">Puente Elevadizo</div>
+            <div class="live-item__valor">{{ valorDe('PUENTE.ESTADO') ?? 'SIN DATOS' }}</div>
+            <div class="live-item__meta">Ángulo: {{ numeroDe('PUENTE.ANGULO') ?? '—' }}°</div>
+          </div>
+
+          <div class="live-item">
+            <div class="live-item__title">Teleférico</div>
+            <div class="live-item__valor">{{ valorDe('TELEFERICO.MOVIMIENTO') ?? 'SIN DATOS' }}</div>
+            <div class="live-item__meta">Pasos restantes: {{ numeroDe('TELEFERICO.PASOS') ?? '—' }}</div>
+          </div>
+
+          <div class="live-item">
+            <div class="live-item__title">Elevador Empire State</div>
+            <div class="live-item__valor">
+              Nivel {{ numeroDe('ELEVADOR.NIVEL') ?? '—' }}
+            </div>
+            <div class="live-item__meta">6 pisos (0 - 5)</div>
+          </div>
+
+          <div class="live-item">
+            <div class="live-item__title">Fuente Central Park</div>
+            <div class="live-item__valor">
+              {{ valorDe('FUENTE.BOMBA') === 'ON' ? 'BOMBA ENCENDIDA' : 'BOMBA APAGADA' }}
+            </div>
+            <div class="live-item__meta">
+              Agua: {{ numeroDe('FUENTE.AGUA') ?? '—' }}% · Luces:
+              {{ valorDe('FUENTE.LUCES') ?? '—' }}
+            </div>
+          </div>
+
+          <div class="live-item">
+            <div class="live-item__title">Semáforos</div>
+            <div class="live-item__valor">
+              NS {{ valorDe('SEMAFORO.NS') ?? '—' }} · EO {{ valorDe('SEMAFORO.EO') ?? '—' }}
+            </div>
+            <div class="live-item__meta">Modo: {{ valorDe('SEMAFORO.MODO') ?? '—' }}</div>
+          </div>
+        </div>
+
+        <div v-if="error" class="live-error">{{ error }}</div>
       </div>
 
       <div class="content-grid">
@@ -380,5 +479,86 @@ const authStore = useAuthStore()
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--nyc-steel-light);
+}
+
+/* ===== Estado en vivo ===== */
+.live-card {
+  margin-bottom: 2rem;
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #16A34A;
+}
+
+.live-indicator__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22C55E;
+  animation: livePulse 1.4s infinite;
+}
+
+.live-note {
+  font-size: 0.78rem;
+  color: var(--nyc-steel-light);
+  margin: 0 0 1rem;
+}
+
+.live-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.live-item {
+  background: var(--nyc-gray-100);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.live-item__title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--nyc-steel);
+}
+
+.live-item__valor {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--nyc-navy);
+}
+
+.live-item__meta {
+  font-size: 0.74rem;
+  color: var(--nyc-steel-light);
+}
+
+.live-error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #DC2626;
+  font-size: 0.82rem;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
 }
 </style>

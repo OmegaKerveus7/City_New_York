@@ -136,6 +136,48 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "API_rest_City.Controllers.EstadoController",
+    "Method": "Registrar",
+    "RelativePath": "api/estado",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_rest_City.Controllers.EstadoRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.EstadoController",
+    "Method": "Obtener",
+    "RelativePath": "api/estado/{clave}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "clave",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.EstadoController",
+    "Method": "ObtenerTodos",
+    "RelativePath": "api/estado/todos",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API_rest_City.Controllers.InstruccionesController",
     "Method": "ObtenerInstrucciones",
     "RelativePath": "api/Instrucciones",
@@ -220,6 +262,98 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "ObtenerEstado",
+    "RelativePath": "api/jardin/estado",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "ApagarFuente",
+    "RelativePath": "api/jardin/fuente/apagar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "EncenderFuente",
+    "RelativePath": "api/jardin/fuente/encender",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "PulsoFuente",
+    "RelativePath": "api/jardin/fuente/pulso",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "segundos",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "StatusFuente",
+    "RelativePath": "api/jardin/fuente/status",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "ObtenerLog",
+    "RelativePath": "api/jardin/log",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "limite",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "ApagarLuces",
+    "RelativePath": "api/jardin/luces/apagar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.JardinController",
+    "Method": "EncenderLuces",
+    "RelativePath": "api/jardin/luces/encender",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API_rest_City.Controllers.PuenteController",
     "Method": "AbrirPuente",
     "RelativePath": "api/Puente/abrir",
@@ -263,6 +397,78 @@
         "IsRequired": false
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.SemaforoController",
+    "Method": "ModoAutomatico",
+    "RelativePath": "api/semaforo/auto",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.SemaforoController",
+    "Method": "Cambiar",
+    "RelativePath": "api/semaforo/cambiar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_rest_City.Controllers.SemaforoRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.SemaforoController",
+    "Method": "ObtenerEstado",
+    "RelativePath": "api/semaforo/estado",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.SemaforoController",
+    "Method": "ObtenerLog",
+    "RelativePath": "api/semaforo/log",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "limite",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.SemaforoController",
+    "Method": "Parar",
+    "RelativePath": "api/semaforo/parar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_rest_City.Controllers.SemaforoController",
+    "Method": "Status",
+    "RelativePath": "api/semaforo/status",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

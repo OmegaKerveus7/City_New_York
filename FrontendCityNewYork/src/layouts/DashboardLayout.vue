@@ -40,6 +40,12 @@ const menuItems = [
         label: 'Teleferico',
         icon: 'cable',
         route: '/teleferico'
+      },
+      {
+        id: 'semaforo',
+        label: 'Semaforos',
+        icon: 'traffic',
+        route: '/semaforo'
       }
     ]
   },
@@ -141,6 +147,12 @@ const toggleMenu = (menuId: string) => {
                   <svg v-if="child.icon === 'cable'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2v20M2 12h20M7 7l-5 5M17 7l5 5M7 17l-5-5M17 17l5-5" />
                     <circle cx="12" cy="12" r="2" />
+                  </svg>
+                  <svg v-if="child.icon === 'traffic'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="7" y="2" width="10" height="20" rx="3" />
+                    <circle cx="12" cy="7" r="1.6" />
+                    <circle cx="12" cy="12" r="1.6" />
+                    <circle cx="12" cy="17" r="1.6" />
                   </svg>
                   <svg v-if="child.icon === 'elevator'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="2" width="12" height="20" rx="1" />

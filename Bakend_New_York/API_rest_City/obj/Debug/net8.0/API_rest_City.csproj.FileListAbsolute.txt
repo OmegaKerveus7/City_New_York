@@ -100,4 +100,20 @@ C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.de
 C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.runtimeconfig.json
 C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.dll
 C:\Users\tobia\AppData\Local\Temp\opencode\api-build-queueclaim\API_rest_City.pdb
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\appsettings.Development.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\appsettings.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\API_rest_City.staticwebassets.endpoints.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\API_rest_City.exe
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\API_rest_City.deps.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\API_rest_City.runtimeconfig.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\API_rest_City.dll
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check\API_rest_City.pdb
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\appsettings.Development.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\appsettings.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\API_rest_City.staticwebassets.endpoints.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\API_rest_City.exe
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\API_rest_City.deps.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\API_rest_City.runtimeconfig.json
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\API_rest_City.dll
+C:\Users\tobia\AppData\Local\Temp\opencode\city_build_check2\API_rest_City.pdb
 C:\Users\tobia\Desktop\Programas\Programas VSC\TypeScript\City_New_York\Bakend_New_York\API_rest_City\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
